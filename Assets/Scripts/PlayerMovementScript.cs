@@ -15,7 +15,9 @@ public class PlayerMovementScript : MonoBehaviour
     
     private Rigidbody2D rb;
     public float extraGravity;
-    
+
+    public ParticleSystem jumpParticles;
+
     public int yLevel;
     public Vector3 backPos;
 
@@ -24,7 +26,7 @@ public class PlayerMovementScript : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         Vector2 boxCastSize = new Vector2(GetComponent<BoxCollider2D>().size.x - .025f, 0.05f);
         
@@ -36,17 +38,31 @@ public class PlayerMovementScript : MonoBehaviour
         
         if (Input.GetButton("Jump") && isGrounded)
         {
+            Destroy(Instantiate(jumpParticles, groundCheck.position, Quaternion.identity).gameObject, 1f);
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
         }
         
         if (transform.position.y < yLevel)
         {
-            transform.position = backPos;
-            rb.velocity = Vector2.zero;
+            Die();
         }
         
         rb.velocity = new Vector2(x,rb.velocity.y);
         
-        rb.AddForce(Vector2.down * extraGravity);
+        rb.AddForce(Vector2.down * extraGravity, ForceMode2D.Impulse);
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.transform.CompareTag("enemy"))
+        {
+            Die();
+        }
+    }
+
+    public void Die()
+    {
+        transform.position = backPos;
+        rb.velocity = Vector2.zero;
     }
 }
